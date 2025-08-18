@@ -5,7 +5,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final database = AppDatabase();
-  List<ProductData> products = await database.select(database.productDB).get();
+  // await database.into(database.productDB).insert(ProductDBCompanion.insert(
+  //       name: "Produto A",
+  //       category: "Categoria",
+  //       inPantry: true,
+  //       minQuantity: 1,
+  //     ));
+  var products = await (database.select(database.productDB)
+        ..where(
+          (tbl) => tbl.name.equals("Produto A"),
+        ))
+      .get();
+  // List<ProductData> products = await database.select(database.productDB).where((tbl) => tbl.id == 1,).get();
+  print(products);
 
   runApp(const MainApp());
 }
