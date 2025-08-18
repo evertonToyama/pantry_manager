@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:pantry_manager/core/database/database.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final database = AppDatabase();
+  List<ProductData> products = await database.select(database.productDB).get();
+
   runApp(const MainApp());
 }
 
