@@ -17,3 +17,7 @@ abstract class Failure extends Equatable {
     return "$statusCode - Error: $message";
   }
 }
+
+class DatabaseFailure extends Failure {
+  const DatabaseFailure({required super.message, required super.statusCode});
+}
