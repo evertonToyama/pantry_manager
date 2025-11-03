@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:pantry_manager/core/failures/failures.dart';
+import 'package:pantry_manager/core/errors/failures.dart';
 
 abstract class UsecaseWithParams<Type, Params> {
   const UsecaseWithParams();
