@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:pantry_manager/features/products/data/models/product_model.dart';
 import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
@@ -51,5 +52,35 @@ class AppDatabase extends _$AppDatabase {
         databaseDirectory: getApplicationSupportDirectory,
       ),
     );
+  }
+}
+
+class ProductMapper {
+  static ProductModel fromDriftData(ProductData product) {
+    return ProductModel(
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      inPantry: product.inPantry,
+      minQuantity: product.minQuantity,
+    );
+  }
+
+  static ProductDBCompanion toDriftCompanion(ProductModel product) {
+    return ProductDBCompanion(
+      id: Value(product.id),
+      name: Value(product.name),
+      category: Value(product.category),
+      inPantry: product.inPantry != null
+          ? Value(product.inPantry!)
+          : const Value.absent(),
+      minQuantity: product.minQuantity != null
+          ? Value(product.minQuantity!)
+          : const Value.absent(),
+    );
+  }
+
+  static List<ProductModel> fromDriftDataList(List<ProductData> products) {
+    return products.map(fromDriftData).toList();
   }
 }
