@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:pantry_manager/core/failures/failures.dart';
+import 'package:pantry_manager/core/errors/failures.dart';
 import 'package:pantry_manager/features/products/domain/entities/product_entity.dart';
 import 'package:pantry_manager/features/products/domain/usecases/create_product_params.dart';
 import 'package:pantry_manager/features/products/domain/usecases/update_product_info_params.dart';
