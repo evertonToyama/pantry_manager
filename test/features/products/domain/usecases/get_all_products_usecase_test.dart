@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:pantry_manager/core/failures/failures.dart';
+import 'package:pantry_manager/core/errors/failures.dart';
 import 'package:pantry_manager/features/products/domain/entities/product_entity.dart';
 import 'package:pantry_manager/features/products/domain/repositories/product_repository.dart';
 import 'package:pantry_manager/features/products/domain/usecases/get_all_products_usecase.dart';

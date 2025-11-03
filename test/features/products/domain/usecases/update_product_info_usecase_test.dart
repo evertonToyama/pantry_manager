@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:pantry_manager/core/failures/failures.dart';
+import 'package:pantry_manager/core/errors/failures.dart';
 import 'package:pantry_manager/features/products/domain/repositories/product_repository.dart';
 import 'package:pantry_manager/features/products/domain/usecases/update_product_info_params.dart';
 import 'package:pantry_manager/features/products/domain/usecases/update_product_info_usecase.dart';
@@ -44,7 +44,7 @@ void main() {
 
     final result = await usecase(tParams);
 
-    expect(result, equals(const Right<dynamic, void>(null)));
+    expect(result, equals(const Left<DatabaseFailure, dynamic>(tFailure)));
     verify(() => productRepository.updateProductInfo(tParams));
     verifyNoMoreInteractions(productRepository);
   });
