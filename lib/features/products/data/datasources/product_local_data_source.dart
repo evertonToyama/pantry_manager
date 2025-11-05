@@ -105,7 +105,7 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
       }
 
       return ProductMapper.fromDriftData(result);
-    } catch (e) {
+    } on SqliteException catch (e) {
       throw DatabaseException(
         message: e.toString(),
         statusCode: 505,

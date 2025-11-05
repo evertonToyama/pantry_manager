@@ -117,10 +117,16 @@ void main() {
     });
 
     test("fail", () async {
+      // ACT
       database.productDB.insertOne(tData);
-      final result = await datasource.getProduct(id: 2);
 
-      expect(result, equals(null));
+      // ASSERT
+      expect(
+          () => datasource.getProduct(id: 2),
+          throwsA(const DatabaseException(
+            message: "Product not found",
+            statusCode: 402,
+          )));
     });
   });
 
