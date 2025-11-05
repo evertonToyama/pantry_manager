@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:pantry_manager/core/database/database.dart';
 import 'package:pantry_manager/core/errors/exceptions.dart';
 import 'package:pantry_manager/features/products/data/datasources/product_local_data_source.dart';
@@ -68,8 +67,28 @@ void main() {
       expect(result, equals(1));
     });
 
-    test("fail", () async {
-//
+    test("fail duplicated product", () async {
+      // ARRANGE
+      // ACT
+      await datasource.createProduct(
+        name: tName,
+        category: tCategory,
+        inPantry: tInPantry,
+        minQuantity: tMinQuantity,
+      );
+
+      // ASSERT
+      expect(
+          () => datasource.createProduct(
+                name: tName,
+                category: tCategory,
+                inPantry: tInPantry,
+                minQuantity: tMinQuantity,
+              ),
+          throwsA(const DatabaseException(
+            message: 'Duplicated name',
+            statusCode: 502,
+          )));
     });
   });
 
@@ -94,7 +113,7 @@ void main() {
       database.productDB.insertOne(tData);
       final result = await datasource.getProduct(id: tId);
 
-      expect(result!.id, equals(tId));
+      expect(result.id, equals(tId));
     });
 
     test("fail", () async {
@@ -130,22 +149,23 @@ void main() {
   });
 
   group("delete product", () {
-    test("success", () async {});
+    test("success", () async {
+      // ARRANGE
+      database.productDB.insertOne(tData);
+
+      // ACT
+      var result = await datasource.deleteProduct(id: tData.id);
+
+      // ASSERT
+      expect(result, 1);
+    });
 
     test("fail", () async {
-      when(
-        () => (database.delete(database.productDB)
-              ..where((tb) => tb.id.equals(tId)))
-            .go(),
-      ).thenThrow(tException);
+      // ACT
+      var result = await datasource.deleteProduct(id: tId);
 
-      expect(datasource.deleteProduct(id: tId), isA<DatabaseException>());
-      verify(
-        () => (database.delete(database.productDB)
-              ..where((tb) => tb.id.equals(tId)))
-            .go(),
-      ).called(1);
-      verifyNoMoreInteractions(database);
+      // ASSERT
+      expect(result, 0);
     });
   });
 }
