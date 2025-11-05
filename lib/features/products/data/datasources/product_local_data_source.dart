@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:pantry_manager/core/database/database.dart';
 import 'package:pantry_manager/core/errors/exceptions.dart';
 import 'package:pantry_manager/features/products/data/models/product_model.dart';
@@ -32,14 +34,26 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
     required int minQuantity,
   }) async {
     try {
-      return await _database
-          .into(_database.productDB)
-          .insert(ProductDBCompanion.insert(
+      return await _database.into(_database.productDB).insert(
+          ProductDBCompanion.insert(
             name: name,
             category: category,
             inPantry: inPantry,
             minQuantity: minQuantity,
-          ));
+          ),
+          mode: InsertMode.insert);
+    } on SqliteException catch (ex) {
+      if (ex.extendedResultCode == 2067) {
+        throw const DatabaseException(
+          message: "Duplicated name",
+          statusCode: 502,
+        );
+      }
+
+      throw DatabaseException(
+        message: ex.message,
+        statusCode: ex.extendedResultCode,
+      );
     } catch (e) {
       throw DatabaseException(
         message: e.toString(),

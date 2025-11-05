@@ -11,7 +11,7 @@ mixin TableMixin on Table {
 
 @DataClassName("ProductData")
 class ProductDB extends Table with TableMixin {
-  TextColumn get name => text().withLength(min: 1, max: 32)();
+  TextColumn get name => text().unique().withLength(min: 1, max: 32)();
   TextColumn get category => text().withLength(min: 1, max: 16)();
   BoolColumn get inPantry => boolean()();
   IntColumn get minQuantity => integer()();

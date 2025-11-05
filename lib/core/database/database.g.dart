@@ -25,7 +25,8 @@ class $ProductDBTable extends ProductDB
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 32),
       type: DriftSqlType.string,
-      requiredDuringInsert: true);
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
   static const VerificationMeta _categoryMeta =
       const VerificationMeta('category');
   @override
