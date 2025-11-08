@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:pantry_manager/core/errors/exceptions.dart';
 import 'package:pantry_manager/core/errors/failures.dart';
 import 'package:pantry_manager/features/products/data/datasources/product_local_data_source.dart';
+import 'package:pantry_manager/features/products/data/repositories/product_mapper.dart';
 import 'package:pantry_manager/features/products/domain/entities/product_entity.dart';
 import 'package:pantry_manager/features/products/domain/repositories/product_repository.dart';
 import 'package:pantry_manager/features/products/domain/usecases/create_product_params.dart';
@@ -45,7 +46,7 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<Either<Failure, List<ProductEntity>>> getAllProducts() async {
     try {
       final list = await localDataSource.getAllProducts();
-      return Right(list);
+      return Right(list.toEntityList());
     } on DatabaseException catch (ex) {
       return Left(
           DatabaseFailure(message: ex.message, statusCode: ex.statusCode));
@@ -56,13 +57,7 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<Either<Failure, ProductEntity>> getProduct(int id) async {
     try {
       final product = await localDataSource.getProduct(id: id);
-      return Right(ProductEntity(
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        inPantry: product.inPantry,
-        minQuantity: product.minQuantity,
-      ));
+      return Right(product.toEntity());
     } on DatabaseException catch (ex) {
       return Left(
           DatabaseFailure(message: ex.message, statusCode: ex.statusCode));

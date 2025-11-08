@@ -104,6 +104,13 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
             message: "Product not found", statusCode: 402);
       }
 
+      if (result.minQuantity <= 0) {
+        throw const DatabaseException(
+          message: "Min quantity out of bounds",
+          statusCode: 503,
+        );
+      }
+
       return ProductMapper.fromDriftData(result);
     } on SqliteException catch (e) {
       throw DatabaseException(

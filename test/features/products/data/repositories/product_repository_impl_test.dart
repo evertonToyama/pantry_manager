@@ -4,8 +4,11 @@ import 'package:mocktail/mocktail.dart';
 import 'package:pantry_manager/core/errors/exceptions.dart';
 import 'package:pantry_manager/core/errors/failures.dart';
 import 'package:pantry_manager/features/products/data/datasources/product_local_data_source.dart';
+import 'package:pantry_manager/features/products/data/models/product_model.dart';
+import 'package:pantry_manager/features/products/data/repositories/product_mapper.dart';
 import 'package:pantry_manager/features/products/data/repositories/product_repository_impl.dart';
 import 'package:pantry_manager/features/products/domain/usecases/create_product_params.dart';
+import 'package:pantry_manager/features/products/domain/usecases/update_product_info_params.dart';
 
 class MockProductLocalDataSource extends Mock
     implements ProductLocalDataSource {}
@@ -153,20 +156,157 @@ void main() {
   });
 
   group("get all products", () {
-    test("success", () async {});
-    test("fail empty list", () async {});
-    test("fail", () async {});
+    var products = [const ProductModel.empty(), const ProductModel.empty()];
+    var empty = [];
+    test("success", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getAllProducts(),
+      ).thenAnswer((_) async => products);
+
+      // ACT
+      var result = await repository.getAllProducts();
+
+      // ASSERT
+      result.fold(
+        (failure) => fail("Expected Right but got Left - $failure"),
+        (actual) => expect(actual, products.toEntityList()),
+      );
+    });
+
+    test("fail empty list", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getAllProducts(),
+      ).thenAnswer((_) async => []);
+
+      // ACT
+      var result = await repository.getAllProducts();
+
+      // ASSERT
+      result.fold(
+        (failure) => fail("Expected Right but got Left - $failure"),
+        (actual) => expect(actual, []),
+      );
+    });
+    test("fail", () async {
+      // ARRANGE
+      when(() => localDataSource.getAllProducts())
+          .thenThrow(const DatabaseFailure(
+        message: "Error",
+        statusCode: 505,
+      ));
+
+      // ACT
+      // ASSERT
+      expect(
+          () => repository.getAllProducts(),
+          throwsA(const DatabaseFailure(
+            message: "Error",
+            statusCode: 505,
+          )));
+    });
   });
 
   group("get product", () {
-    test("success", () async {});
-    test("fail ID not found", () async {});
-    test("fail", () async {});
+    const productModel = ProductModel.empty();
+    test("success", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).thenAnswer((_) async => productModel);
+
+      // ACT
+      var result = await repository.getProduct(1);
+
+      // ASSERT
+      expect(result, Right(productModel.toEntity()));
+    });
+    test("fail ID not found", () async {
+      // ARRANGE
+      when((() => localDataSource.getProduct(id: any(named: "id"))))
+          .thenThrow(const Left(DatabaseFailure(
+        message: "Product not found",
+        statusCode: 402,
+      )));
+
+      // ACT
+      // ASSERT
+      expect(
+          () => repository.getProduct(1),
+          throwsA(const Left(DatabaseFailure(
+            message: "Product not found",
+            statusCode: 402,
+          ))));
+      verify(() => localDataSource.getProduct(id: any(named: "id"))).called(1);
+      verifyNoMoreInteractions(localDataSource);
+    });
+    test("fail", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).thenThrow(const Left(
+        DatabaseFailure(
+          message: "error",
+          statusCode: 500,
+        ),
+      ));
+
+      // ACT
+      // ASSERT
+      expect(
+          () => repository.getProduct(0),
+          throwsA(const Left(DatabaseFailure(
+            message: "error",
+            statusCode: 500,
+          ))));
+      verify(() => localDataSource.getProduct(
+            id: any(named: "id"),
+          )).called(1);
+      verifyNoMoreInteractions(localDataSource);
+    });
   });
 
   group("update product info", () {
-    test("success", () async {});
-    test("fail out of bounds", () async {});
+    const productModel = ProductModel.empty();
+    const params =
+        UpdateProductInfoParams(id: 0, name: "name", category: "category");
+    test("success", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.updateProduct(
+            product: ProductModel(
+          id: any(named: "id"),
+          name: any(named: "name"),
+          category: any(named: "category"),
+          inPantry: any(named: "inPantry"),
+          minQuantity: any(named: "minQuantity"),
+        )),
+      ).thenAnswer((_) async => 1);
+
+      // ACT
+      final result = await repository.updateProductInfo(params);
+
+      // ASSERT
+      expect(result, equals(const Right(1)));
+    });
+    test("fail out of bounds", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.updateProduct(
+            product: ProductModel(
+          id: any(named: "id"),
+          name: any(named: "name"),
+          category: any(named: "category"),
+          inPantry: any(named: "inPantry"),
+          minQuantity: any(named: "minQuantity"),
+        )),
+      ).thenAnswer((_) async => 1);
+
+      // ACT
+
+      // ASSERT
+    });
     test("fail id not found", () async {});
     test("fail", () async {});
   });
