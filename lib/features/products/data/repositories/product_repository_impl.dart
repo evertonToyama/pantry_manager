@@ -85,6 +85,12 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<Either<Failure, void>> updateProductPantry(
       UpdateProductPantryParams params) async {
     try {
+      if (params.minQuantity < 0) {
+        return const Left(DatabaseFailure(
+          message: "Min Quantity is out of range",
+          statusCode: 503,
+        ));
+      }
       final product = await localDataSource.getProduct(id: params.id)
         ..copyWith(
           inPantry: params.isPantry,

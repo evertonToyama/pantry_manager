@@ -9,11 +9,14 @@ import 'package:pantry_manager/features/products/data/repositories/product_mappe
 import 'package:pantry_manager/features/products/data/repositories/product_repository_impl.dart';
 import 'package:pantry_manager/features/products/domain/usecases/create_product_params.dart';
 import 'package:pantry_manager/features/products/domain/usecases/update_product_info_params.dart';
+import 'package:pantry_manager/features/products/domain/usecases/update_product_pantry_params.dart';
 
 class MockProductLocalDataSource extends Mock
     implements ProductLocalDataSource {}
 
 class MockProductRepositoryImpl extends Mock implements ProductRepositoryImpl {}
+
+class MockProductModel extends Mock implements ProductModel {}
 
 void main() {
   late ProductLocalDataSource localDataSource;
@@ -22,6 +25,10 @@ void main() {
   setUp(() {
     localDataSource = MockProductLocalDataSource();
     repository = ProductRepositoryImpl(localDataSource: localDataSource);
+  });
+
+  setUpAll(() {
+    registerFallbackValue(MockProductModel());
   });
 
   group("create product", () {
@@ -274,47 +281,198 @@ void main() {
     test("success", () async {
       // ARRANGE
       when(
-        () => localDataSource.updateProduct(
-            product: ProductModel(
-          id: any(named: "id"),
-          name: any(named: "name"),
-          category: any(named: "category"),
-          inPantry: any(named: "inPantry"),
-          minQuantity: any(named: "minQuantity"),
-        )),
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).thenAnswer((_) async => productModel);
+      when(
+        () => localDataSource.updateProduct(product: productModel),
       ).thenAnswer((_) async => 1);
 
       // ACT
       final result = await repository.updateProductInfo(params);
 
       // ASSERT
-      expect(result, equals(const Right(1)));
+      expect(result, equals(const Right(null)));
     });
-    test("fail out of bounds", () async {
+    test("fail id not found", () async {
       // ARRANGE
-      when(
-        () => localDataSource.updateProduct(
+      when(() => localDataSource.getProduct(id: any(named: "id")))
+          .thenThrow(const DatabaseException(
+        message: "Product not found",
+        statusCode: 502,
+      ));
+      when(() => localDataSource.updateProduct(
             product: ProductModel(
-          id: any(named: "id"),
-          name: any(named: "name"),
-          category: any(named: "category"),
-          inPantry: any(named: "inPantry"),
-          minQuantity: any(named: "minQuantity"),
-        )),
-      ).thenAnswer((_) async => 1);
+              id: params.id,
+              name: params.name,
+              category: params.category,
+              inPantry: false,
+              minQuantity: 0,
+            ),
+          )).thenAnswer((_) async => 0);
 
       // ACT
+      var result = await repository.updateProductInfo(params);
 
       // ASSERT
+      expect(
+          result,
+          const Left(DatabaseFailure(
+            message: "Product not found",
+            statusCode: 502,
+          )));
+      verifyNever(() => localDataSource.updateProduct(
+            product: ProductModel(
+              id: params.id,
+              name: params.name,
+              category: params.category,
+              inPantry: false,
+              minQuantity: 0,
+            ),
+          ));
+      verify(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).called(1);
+      verifyNoMoreInteractions(localDataSource);
     });
-    test("fail id not found", () async {});
-    test("fail", () async {});
+    test("fail", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).thenAnswer((_) async => productModel);
+      when(
+        () => localDataSource.updateProduct(product: productModel),
+      ).thenThrow(const DatabaseException(
+        message: "error",
+        statusCode: 505,
+      ));
+
+      // ACT
+      final result = await repository.updateProductInfo(params);
+
+      // ASSERT
+      expect(
+          result,
+          const Left(DatabaseFailure(
+            message: "error",
+            statusCode: 505,
+          )));
+    });
   });
 
   group("update product pantry", () {
-    test("success", () async {});
-    test("fail out of bounds", () async {});
-    test("fail id not found", () async {});
-    test("fail", () async {});
+    const productModel = ProductModel.empty();
+    const params = UpdateProductPantryParams(
+      id: 0,
+      isPantry: true,
+      minQuantity: 1,
+    );
+
+    test("success", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).thenAnswer((_) async => productModel);
+
+      when(
+        () => localDataSource.updateProduct(product: any(named: "product")),
+      ).thenAnswer((_) async => 1);
+
+      // ACT
+      var result = await repository.updateProductPantry(params);
+
+      // ASSERT
+      expect(result, equals(const Right(null)));
+      verify(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).called(1);
+      verify(
+        () => localDataSource.updateProduct(product: any(named: "product")),
+      ).called(1);
+      verifyNoMoreInteractions(localDataSource);
+    });
+    test("fail out of bounds", () async {
+      // ARRANGE
+
+      // ACT
+      var result =
+          await repository.updateProductPantry(const UpdateProductPantryParams(
+        id: 0,
+        isPantry: false,
+        minQuantity: -1,
+      ));
+
+      // ASSERT
+      expect(
+          result,
+          const Left(DatabaseFailure(
+            message: "Min Quantity is out of range",
+            statusCode: 503,
+          )));
+      verifyNever(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      );
+      verifyNever(
+        () => localDataSource.updateProduct(product: any(named: "product")),
+      );
+      verifyNoMoreInteractions(localDataSource);
+    });
+    test("fail id not found", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).thenThrow(const DatabaseException(
+        message: "Product not found",
+        statusCode: 502,
+      ));
+      // when(() => localDataSource.updateProduct(product: any(named: "product"))).then
+
+      // ACT
+      var result = await repository.updateProductPantry(params);
+
+      // ASSERT
+      expect(
+          result,
+          const Left(DatabaseFailure(
+            message: "Product not found",
+            statusCode: 502,
+          )));
+      verify(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).called(1);
+      verifyNever(
+        () => localDataSource.updateProduct(product: any(named: "product")),
+      );
+      verifyNoMoreInteractions(localDataSource);
+    });
+    test("fail", () async {
+      // ARRANGE
+      when(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).thenAnswer((_) async => productModel);
+      when(
+        () => localDataSource.updateProduct(product: any(named: "product")),
+      ).thenThrow(const DatabaseException(
+        message: "Error",
+        statusCode: 503,
+      ));
+
+      // ACT
+      var result = await repository.updateProductPantry(params);
+
+      // ASSERT
+      expect(
+          result,
+          const Left(DatabaseFailure(
+            message: "Error",
+            statusCode: 503,
+          )));
+      verify(
+        () => localDataSource.getProduct(id: any(named: "id")),
+      ).called(1);
+      verify(
+        () => localDataSource.updateProduct(product: any(named: "product")),
+      ).called(1);
+      verifyNoMoreInteractions(localDataSource);
+    });
   });
 }
