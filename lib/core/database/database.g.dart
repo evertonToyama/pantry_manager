@@ -521,15 +521,16 @@ class $ListDBTable extends ListDB with TableInfo<$ListDBTable, ListData> {
   late final GeneratedColumn<bool> isFinished = GeneratedColumn<bool>(
       'is_finished', aliasedName, false,
       type: DriftSqlType.bool,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_finished" IN (0, 1))'));
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_finished" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _storeMeta = const VerificationMeta('store');
   @override
   late final GeneratedColumn<int> store = GeneratedColumn<int>(
-      'store', aliasedName, false,
+      'store', aliasedName, true,
       type: DriftSqlType.int,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES store_d_b (id)'));
   @override
@@ -558,14 +559,10 @@ class $ListDBTable extends ListDB with TableInfo<$ListDBTable, ListData> {
           _isFinishedMeta,
           isFinished.isAcceptableOrUnknown(
               data['is_finished']!, _isFinishedMeta));
-    } else if (isInserting) {
-      context.missing(_isFinishedMeta);
     }
     if (data.containsKey('store')) {
       context.handle(
           _storeMeta, store.isAcceptableOrUnknown(data['store']!, _storeMeta));
-    } else if (isInserting) {
-      context.missing(_storeMeta);
     }
     return context;
   }
@@ -583,7 +580,7 @@ class $ListDBTable extends ListDB with TableInfo<$ListDBTable, ListData> {
       isFinished: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_finished'])!,
       store: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}store'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}store']),
     );
   }
 
@@ -597,19 +594,21 @@ class ListData extends DataClass implements Insertable<ListData> {
   final int id;
   final String name;
   final bool isFinished;
-  final int store;
+  final int? store;
   const ListData(
       {required this.id,
       required this.name,
       required this.isFinished,
-      required this.store});
+      this.store});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['is_finished'] = Variable<bool>(isFinished);
-    map['store'] = Variable<int>(store);
+    if (!nullToAbsent || store != null) {
+      map['store'] = Variable<int>(store);
+    }
     return map;
   }
 
@@ -618,7 +617,8 @@ class ListData extends DataClass implements Insertable<ListData> {
       id: Value(id),
       name: Value(name),
       isFinished: Value(isFinished),
-      store: Value(store),
+      store:
+          store == null && nullToAbsent ? const Value.absent() : Value(store),
     );
   }
 
@@ -629,7 +629,7 @@ class ListData extends DataClass implements Insertable<ListData> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       isFinished: serializer.fromJson<bool>(json['isFinished']),
-      store: serializer.fromJson<int>(json['store']),
+      store: serializer.fromJson<int?>(json['store']),
     );
   }
   @override
@@ -639,16 +639,20 @@ class ListData extends DataClass implements Insertable<ListData> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'isFinished': serializer.toJson<bool>(isFinished),
-      'store': serializer.toJson<int>(store),
+      'store': serializer.toJson<int?>(store),
     };
   }
 
-  ListData copyWith({int? id, String? name, bool? isFinished, int? store}) =>
+  ListData copyWith(
+          {int? id,
+          String? name,
+          bool? isFinished,
+          Value<int?> store = const Value.absent()}) =>
       ListData(
         id: id ?? this.id,
         name: name ?? this.name,
         isFinished: isFinished ?? this.isFinished,
-        store: store ?? this.store,
+        store: store.present ? store.value : this.store,
       );
   ListData copyWithCompanion(ListDBCompanion data) {
     return ListData(
@@ -687,7 +691,7 @@ class ListDBCompanion extends UpdateCompanion<ListData> {
   final Value<int> id;
   final Value<String> name;
   final Value<bool> isFinished;
-  final Value<int> store;
+  final Value<int?> store;
   const ListDBCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -697,11 +701,9 @@ class ListDBCompanion extends UpdateCompanion<ListData> {
   ListDBCompanion.insert({
     this.id = const Value.absent(),
     required String name,
-    required bool isFinished,
-    required int store,
-  })  : name = Value(name),
-        isFinished = Value(isFinished),
-        store = Value(store);
+    this.isFinished = const Value.absent(),
+    this.store = const Value.absent(),
+  }) : name = Value(name);
   static Insertable<ListData> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -720,7 +722,7 @@ class ListDBCompanion extends UpdateCompanion<ListData> {
       {Value<int>? id,
       Value<String>? name,
       Value<bool>? isFinished,
-      Value<int>? store}) {
+      Value<int?>? store}) {
     return ListDBCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -783,16 +785,19 @@ class $ItemDBTable extends ItemDB with TableInfo<$ItemDBTable, ItemData> {
   @override
   late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
       'quantity', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
   static const VerificationMeta _isPurchasedMeta =
       const VerificationMeta('isPurchased');
   @override
   late final GeneratedColumn<bool> isPurchased = GeneratedColumn<bool>(
       'is_purchased', aliasedName, false,
       type: DriftSqlType.bool,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_purchased" IN (0, 1))'));
+          'CHECK ("is_purchased" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _productMeta =
       const VerificationMeta('product');
   @override
@@ -835,16 +840,12 @@ class $ItemDBTable extends ItemDB with TableInfo<$ItemDBTable, ItemData> {
     if (data.containsKey('quantity')) {
       context.handle(_quantityMeta,
           quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
-    } else if (isInserting) {
-      context.missing(_quantityMeta);
     }
     if (data.containsKey('is_purchased')) {
       context.handle(
           _isPurchasedMeta,
           isPurchased.isAcceptableOrUnknown(
               data['is_purchased']!, _isPurchasedMeta));
-    } else if (isInserting) {
-      context.missing(_isPurchasedMeta);
     }
     if (data.containsKey('product')) {
       context.handle(_productMeta,
@@ -1023,13 +1024,11 @@ class ItemDBCompanion extends UpdateCompanion<ItemData> {
   ItemDBCompanion.insert({
     this.id = const Value.absent(),
     required double price,
-    required int quantity,
-    required bool isPurchased,
+    this.quantity = const Value.absent(),
+    this.isPurchased = const Value.absent(),
     required int product,
     required int list,
   })  : price = Value(price),
-        quantity = Value(quantity),
-        isPurchased = Value(isPurchased),
         product = Value(product),
         list = Value(list);
   static Insertable<ItemData> custom({
@@ -1565,14 +1564,14 @@ typedef $$StoreDBTableProcessedTableManager = ProcessedTableManager<
 typedef $$ListDBTableCreateCompanionBuilder = ListDBCompanion Function({
   Value<int> id,
   required String name,
-  required bool isFinished,
-  required int store,
+  Value<bool> isFinished,
+  Value<int?> store,
 });
 typedef $$ListDBTableUpdateCompanionBuilder = ListDBCompanion Function({
   Value<int> id,
   Value<String> name,
   Value<bool> isFinished,
-  Value<int> store,
+  Value<int?> store,
 });
 
 final class $$ListDBTableReferences
@@ -1582,9 +1581,10 @@ final class $$ListDBTableReferences
   static $StoreDBTable _storeTable(_$AppDatabase db) => db.storeDB
       .createAlias($_aliasNameGenerator(db.listDB.store, db.storeDB.id));
 
-  $$StoreDBTableProcessedTableManager get store {
+  $$StoreDBTableProcessedTableManager? get store {
+    if ($_item.store == null) return null;
     final manager = $$StoreDBTableTableManager($_db, $_db.storeDB)
-        .filter((f) => f.id($_item.store));
+        .filter((f) => f.id($_item.store!));
     final item = $_typedResult.readTableOrNull(_storeTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -1791,7 +1791,7 @@ class $$ListDBTableTableManager extends RootTableManager<
             Value<int> id = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<bool> isFinished = const Value.absent(),
-            Value<int> store = const Value.absent(),
+            Value<int?> store = const Value.absent(),
           }) =>
               ListDBCompanion(
             id: id,
@@ -1802,8 +1802,8 @@ class $$ListDBTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String name,
-            required bool isFinished,
-            required int store,
+            Value<bool> isFinished = const Value.absent(),
+            Value<int?> store = const Value.absent(),
           }) =>
               ListDBCompanion.insert(
             id: id,
@@ -1879,8 +1879,8 @@ typedef $$ListDBTableProcessedTableManager = ProcessedTableManager<
 typedef $$ItemDBTableCreateCompanionBuilder = ItemDBCompanion Function({
   Value<int> id,
   required double price,
-  required int quantity,
-  required bool isPurchased,
+  Value<int> quantity,
+  Value<bool> isPurchased,
   required int product,
   required int list,
 });
@@ -2149,8 +2149,8 @@ class $$ItemDBTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required double price,
-            required int quantity,
-            required bool isPurchased,
+            Value<int> quantity = const Value.absent(),
+            Value<bool> isPurchased = const Value.absent(),
             required int product,
             required int list,
           }) =>

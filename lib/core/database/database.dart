@@ -20,8 +20,8 @@ class ProductDB extends Table with TableMixin {
 @DataClassName("ItemData")
 class ItemDB extends Table with TableMixin {
   RealColumn get price => real()();
-  IntColumn get quantity => integer()();
-  BoolColumn get isPurchased => boolean()();
+  IntColumn get quantity => integer().withDefault(const Constant(1))();
+  BoolColumn get isPurchased => boolean().withDefault(const Constant(false))();
   IntColumn get product => integer().references(ProductDB, #id)();
   IntColumn get list => integer().references(ListDB, #id)();
 }
@@ -34,8 +34,8 @@ class StoreDB extends Table with TableMixin {
 @DataClassName("ListData")
 class ListDB extends Table with TableMixin {
   TextColumn get name => text().withLength(min: 1, max: 32)();
-  BoolColumn get isFinished => boolean()();
-  IntColumn get store => integer().references(StoreDB, #id)();
+  BoolColumn get isFinished => boolean().withDefault(const Constant(false))();
+  IntColumn get store => integer().references(StoreDB, #id).nullable()();
 }
 
 @DriftDatabase(tables: [ProductDB, ItemDB, StoreDB, ListDB])
