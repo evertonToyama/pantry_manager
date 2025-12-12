@@ -1,0 +1,68 @@
+CREATE TABLE product (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  category TEXT NOT NULL,
+  in_pantry INTEGER NOT NULL,
+  min_quantity INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE store (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE shopping_list (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  is_finished INTEGER NOT NULL DEFAULT 0,
+  id_store INTEGER NULL REFERENCES store (id)
+);
+
+CREATE TABLE item (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  quantity INTEGER NOT NULL,
+  price INTEGER NULL,
+  is_purchased INTEGER NULL DEFAULT 0,
+  id_product INTEGER NOT NULL REFERENCES product (id),
+  id_list INTEGER NOT NULL REFERENCES shopping_list (id)
+);
+
+_insertProduct: INSERT INTO product (name, category, in_pantry, min_quantity) VALUES (:name, :category, :in_pantry, :min_quantity);
+_getAllProducts: SELECT * FROM product;
+_getProductById: SELECT * FROM product WHERE id = :id;
+_updateProduct: UPDATE product SET name = :name, category = :category, in_pantry = :in_pantry, min_quantity = :min_quantity WHERE id = :id;
+_deleteProduct: DELETE FROM product WHERE id = :id;
+
+_insertStore: INSERT INTO store (name) VALUES (:name);
+_getAllStores: SELECT * FROM store;
+_getStoreById: SELECT * FROM store WHERE id = :id;
+_updateStore: UPDATE store SET name = :name WHERE id = :id;
+_deleteStore: DELETE FROM store WHERE id = :id;
+
+_insertList: INSERT INTO shopping_list (name, is_finished, id_store) VALUES (:name, :is_finished, :id_store);
+_getAllLists: SELECT l.id as id_list, l.name as name_list, is_finished, s.id as id_store, s.name as name_store
+FROM shopping_list as l JOIN store as s ON l.id_store = s.id;
+_getListById: SELECT l.id as id_list, l.name as name_list, is_finished, s.id as id_store, s.name as name_store
+FROM shopping_list as l JOIN store as s ON l.id_store = s.id
+WHERE l.id = :id;
+_updateList: UPDATE shopping_list SET name = :name, is_finished = :is_finished, id_store = :id_store WHERE id = :id;
+_deleteList: DELETE FROM shopping_list WHERE id = :id;
+_getJoin: SELECT l.id AS id_list, l.name AS name_list, l.is_finished, s.id AS id_store, s.name AS name_store FROM shopping_list AS l JOIN store AS s on s.id = l.id_store;
+
+_insertItem: INSERT INTO item (quantity, price, is_purchased, id_product, id_list) VALUES (:quantity, :price, :is_purchased, :id_product, :id_list);
+_getAllItems: SELECT i.id as id_item, quantity, price, is_purchased, p.id as id_product, p.name as name_product, category, in_pantry, min_quantity, l.id as id_list, l.name as name_list, is_finished, s.id as id_store, s.name as name_store
+FROM item as i JOIN product as p ON i.id_product = p.id
+JOIN shopping_list as l ON i.id_list = l.id
+JOIN store as s ON l.id_store = s.id;
+_getItemById: SELECT i.id as id_item, quantity, price, is_purchased, p.id as id_product, p.name as name_product, category, in_pantry, min_quantity, l.id as id_list, l.name as name_list, is_finished, s.id as id_store, s.name as name_store
+FROM item as i JOIN product as p ON i.id_product = p.id
+JOIN shopping_list as l ON i.id_list = l.id
+JOIN store as s ON l.id_store = s.id
+WHERE i.id = :id;
+_getItemsOfList: SELECT i.id as id_item, quantity, price, is_purchased, p.id as id_product, p.name as name_product, category, in_pantry, min_quantity, l.id as id_list, l.name as name_list, is_finished, s.id as id_store, s.name as name_store
+FROM item as i JOIN product as p ON i.id_product = p.id
+JOIN shopping_list as l ON i.id_list = l.id
+JOIN store as s ON l.id_store = s.id
+WHERE l.id = :id_list;
+_updateItem: UPDATE item SET quantity = :quantity, price = :price, is_purchased = :is_purchased, id_product = :id_product, id_list = :id_list WHERE id = :id;
+_deleteItem: DELETE FROM item WHERE id = :id;
