@@ -37,7 +37,7 @@ void main() {
     id: tId,
     name: tName,
     category: tCategory,
-    inPantry: tInPantry,
+    inPantry: 1,
     minQuantity: tMinQuantity,
   );
 
@@ -100,7 +100,7 @@ void main() {
     });
 
     test("should return all products when they exist", () async {
-      database.productDB.insertOne(tData);
+      database.product.insertOne(tData);
       final result = await datasource.getAllProducts();
 
       expect(result, hasLength(1));
@@ -110,7 +110,8 @@ void main() {
 
   group("get product", () {
     test("success", () async {
-      database.productDB.insertOne(tData);
+      await database.createProduct(
+          tData.name, tData.category, tData.inPantry == 1, tData.minQuantity);
       final result = await datasource.getProduct(id: tId);
 
       expect(result.id, equals(tId));
@@ -118,7 +119,7 @@ void main() {
 
     test("fail", () async {
       // ACT
-      database.productDB.insertOne(tData);
+      database.product.insertOne(tData);
 
       // ASSERT
       expect(
@@ -132,7 +133,7 @@ void main() {
 
   group("update product", () {
     test("success", () async {
-      database.productDB.insertOne(tData);
+      database.product.insertOne(tData);
       final result = await datasource.updateProduct(
           product: tModel.copyWith(category: "New Category"));
 
@@ -140,7 +141,7 @@ void main() {
     });
 
     test("fail", () async {
-      database.productDB.insertOne(tData);
+      database.product.insertOne(tData);
       const newModel = ProductModel(
         id: 2,
         name: "New Name",
@@ -157,7 +158,7 @@ void main() {
   group("delete product", () {
     test("success", () async {
       // ARRANGE
-      database.productDB.insertOne(tData);
+      database.product.insertOne(tData);
 
       // ACT
       var result = await datasource.deleteProduct(id: tData.id);

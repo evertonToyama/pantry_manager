@@ -19,7 +19,9 @@ class ListLocalDataSourceImpl extends ListLocalDataSource {
   @override
   Future<int> createList({required String name}) async {
     try {
-      return _database.into(_database.listDB).insert(ListDBCompanion.insert(
+      return _database
+          .into(_database.shoppingList)
+          .insert(ShoppingListCompanion.insert(
             name: name,
           ));
     } on SqliteException catch (ex) {
@@ -33,7 +35,8 @@ class ListLocalDataSourceImpl extends ListLocalDataSource {
   @override
   Future<int> deleteList(int id) async {
     try {
-      ((_database.delete(_database.listDB))..where((l) => l.id.equals(id)))
+      ((_database.delete(_database.shoppingList))
+            ..where((l) => l.id.equals(id)))
           .go();
       return 1;
     } on SqliteException catch (ex) {

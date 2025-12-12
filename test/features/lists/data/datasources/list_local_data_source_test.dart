@@ -59,11 +59,10 @@ void main() {
   group("get all lists", () {
     test("success", () async {
       // ARRANGE
-      database.listDB.insertOne(const ListData(
+      database.shoppingList.insertOne(const ShoppingListData(
         id: 1,
         name: "name",
-        isFinished: false,
-        store: 1,
+        isFinished: 0,
       ));
 
       // ACT
@@ -86,13 +85,12 @@ void main() {
   group("get list", () {
     test("success", () async {
       // ARRANGE
-      database.listDB.insertOne(const ListData(
+      database.shoppingList.insertOne(const ShoppingListData(
         id: 1,
         name: "name",
-        isFinished: false,
-        store: 1,
+        isFinished: 0,
       ));
-      database.storeDB.insertOne(const StoreData(id: 1, name: "name"));
+      database.store.insertOne(const StoreData(id: 1, name: "name"));
 
       // ACT
       var result = await datasource.getList(id: 1);
@@ -124,12 +122,11 @@ void main() {
   group("update list", () {
     test("success", () async {
       // ARRANGE
-      database.storeDB.insertOne(const StoreData(id: 1, name: "name"));
-      database.listDB.insertOne(const ListData(
+      database.store.insertOne(const StoreData(id: 1, name: "name"));
+      database.shoppingList.insertOne(const ShoppingListData(
         id: 1,
         name: "name",
-        isFinished: false,
-        store: 1,
+        isFinished: 0,
       ));
 
       // ACT
@@ -151,11 +148,10 @@ void main() {
   group("delete list", () {
     test("success", () async {
       // ARRANGE
-      database.listDB.insertOne(const ListData(
+      database.shoppingList.insertOne(const ShoppingListData(
         id: 1,
         name: "name",
-        isFinished: false,
-        store: 1,
+        isFinished: 0,
       ));
 
       // ACT

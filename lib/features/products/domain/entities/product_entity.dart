@@ -4,8 +4,8 @@ class ProductEntity extends Equatable {
   final int id;
   final String name;
   final String category;
-  final bool? inPantry;
-  final int? minQuantity;
+  final bool inPantry;
+  final int minQuantity;
 
   const ProductEntity({
     required this.id,
