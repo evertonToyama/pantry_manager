@@ -25,14 +25,6 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
 
   ProductLocalDataSourceImpl(this._database);
 
-  void error() {
-    nestedError();
-  }
-
-  void nestedError() {
-    throw SqliteException(2067, 'Duplicated error');
-  }
-
   @override
   Future<int> createProduct({
     required String name,
@@ -45,10 +37,7 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
           name, category, inPantry, minQuantity);
     } on SqliteException catch (ex) {
       if (ex.extendedResultCode == 2067) {
-        throw const DatabaseException(
-          message: "Duplicated name",
-          statusCode: 502,
-        );
+        throw const ConflictDatabaseException();
       }
 
       throw DatabaseException(
@@ -58,7 +47,7 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
     } catch (e) {
       throw DatabaseException(
         message: e.toString(),
-        statusCode: 505,
+        statusCode: 400,
       );
     }
   }
@@ -70,7 +59,7 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
     } catch (e) {
       throw DatabaseException(
         message: e.toString(),
-        statusCode: 505,
+        statusCode: 400,
       );
     }
   }
@@ -82,7 +71,7 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
     } catch (e) {
       throw DatabaseException(
         message: e.toString(),
-        statusCode: 505,
+        statusCode: 400,
       );
     }
   }
@@ -93,22 +82,18 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
       final result = await _database.getProductById(id);
 
       if (result == null) {
-        throw const DatabaseException(
-            message: "Product not found", statusCode: 402);
+        throw const NotFoundDatabaseException();
       }
 
       if (result.minQuantity < 0) {
-        throw const DatabaseException(
-          message: "Min quantity out of bounds",
-          statusCode: 503,
-        );
+        throw const OutOfBoundsDatabaseException();
       }
 
       return result;
     } on SqliteException catch (e) {
       throw DatabaseException(
         message: e.toString(),
-        statusCode: 505,
+        statusCode: 400,
       );
     }
   }
@@ -126,7 +111,7 @@ class ProductLocalDataSourceImpl extends ProductLocalDataSource {
     } catch (e) {
       throw DatabaseException(
         message: e.toString(),
-        statusCode: 505,
+        statusCode: 400,
       );
     }
   }

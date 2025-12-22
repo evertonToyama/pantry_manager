@@ -20,10 +20,7 @@ void main() {
     minQuantity: 0,
   );
   const List<ProductEntity> tProducts = [tProduct];
-  const DatabaseFailure tFailure = DatabaseFailure(
-    message: "Database Error",
-    statusCode: 501,
-  );
+  const DatabaseFailure tFailure = DatabaseFailure(message: "Database Error");
 
   setUp(() {
     productRepository = MockProductRepository();

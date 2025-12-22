@@ -25,9 +25,10 @@ class ProductRepositoryImpl extends ProductRepository {
         minQuantity: params.minQuantity,
       );
       return const Right(null);
+    } on ConflictDatabaseException catch (_) {
+      return const Left(DuplicatedItemDatabaseFailure());
     } on DatabaseException catch (ex) {
-      return Left(
-          DatabaseFailure(message: ex.message, statusCode: ex.statusCode));
+      return Left(LocalDatabaseFailure(message: ex.message));
     }
   }
 
@@ -37,8 +38,7 @@ class ProductRepositoryImpl extends ProductRepository {
       await localDataSource.deleteProduct(id: id);
       return const Right(null);
     } on DatabaseException catch (ex) {
-      return Left(
-          DatabaseFailure(message: ex.message, statusCode: ex.statusCode));
+      return Left(LocalDatabaseFailure(message: ex.message));
     }
   }
 
@@ -46,10 +46,10 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<Either<Failure, List<ProductEntity>>> getAllProducts() async {
     try {
       final list = await localDataSource.getAllProducts();
+
       return Right(list.toEntityList());
     } on DatabaseException catch (ex) {
-      return Left(
-          DatabaseFailure(message: ex.message, statusCode: ex.statusCode));
+      return Left(LocalDatabaseFailure(message: ex.message));
     }
   }
 
@@ -57,10 +57,12 @@ class ProductRepositoryImpl extends ProductRepository {
   Future<Either<Failure, ProductEntity>> getProduct(int id) async {
     try {
       final product = await localDataSource.getProduct(id: id);
+
       return Right(product.toEntity());
+    } on NotFoundDatabaseException catch (_) {
+      return const Left(NotFoundDatabaseFailure());
     } on DatabaseException catch (ex) {
-      return Left(
-          DatabaseFailure(message: ex.message, statusCode: ex.statusCode));
+      return Left(LocalDatabaseFailure(message: ex.message));
     }
   }
 
@@ -73,11 +75,12 @@ class ProductRepositoryImpl extends ProductRepository {
           name: params.name,
           category: params.category,
         );
+
       await localDataSource.updateProduct(product: product);
+
       return const Right(null);
     } on DatabaseException catch (ex) {
-      return Left(
-          DatabaseFailure(message: ex.message, statusCode: ex.statusCode));
+      return Left(LocalDatabaseFailure(message: ex.message));
     }
   }
 
@@ -86,21 +89,20 @@ class ProductRepositoryImpl extends ProductRepository {
       UpdateProductPantryParams params) async {
     try {
       if (params.minQuantity < 0) {
-        return const Left(DatabaseFailure(
-          message: "Min Quantity is out of range",
-          statusCode: 503,
-        ));
+        return const Left(MinQuantityDatabaseFailure());
       }
+
       final product = await localDataSource.getProduct(id: params.id)
         ..copyWith(
           inPantry: params.isPantry,
           minQuantity: params.minQuantity,
         );
+
       await localDataSource.updateProduct(product: product);
+
       return const Right(null);
     } on DatabaseException catch (ex) {
-      return Left(
-          DatabaseFailure(message: ex.message, statusCode: ex.statusCode));
+      return Left(LocalDatabaseFailure(message: ex.message));
     }
   }
 }

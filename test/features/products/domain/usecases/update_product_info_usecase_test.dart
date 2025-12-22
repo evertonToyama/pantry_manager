@@ -17,10 +17,7 @@ void main() {
     name: "name",
     category: "category",
   );
-  const DatabaseFailure tFailure = DatabaseFailure(
-    message: "Database error",
-    statusCode: 500,
-  );
+  const DatabaseFailure tFailure = DatabaseFailure(message: "Database error");
 
   setUp(() {
     productRepository = MockProductRepository();

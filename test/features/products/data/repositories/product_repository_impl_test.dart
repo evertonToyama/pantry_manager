@@ -74,10 +74,7 @@ void main() {
             category: params.category,
             inPantry: params.inPantry,
             minQuantity: params.minQuantity,
-          )).thenThrow(const DatabaseException(
-        message: "message",
-        statusCode: 500,
-      ));
+          )).thenThrow(const LocalDatabaseException());
 
       // ACT
       var result = await repository.createProduct(params);
@@ -85,10 +82,7 @@ void main() {
       // ASSERT
       expect(
         result,
-        equals(const Left(DatabaseFailure(
-          message: "message",
-          statusCode: 500,
-        ))),
+        equals(const Left(LocalDatabaseFailure())),
       );
       verify(
         () => localDataSource.createProduct(
@@ -107,21 +101,13 @@ void main() {
             category: params.category,
             inPantry: params.inPantry,
             minQuantity: params.minQuantity,
-          )).thenThrow(const DatabaseException(
-        message: "Duplicated name",
-        statusCode: 502,
-      ));
+          )).thenThrow(const ConflictDatabaseException());
 
       // ACT
       var result = await repository.createProduct(params);
 
       // ASSERT
-      expect(
-          result,
-          equals(const Left(DatabaseFailure(
-            message: "Duplicated name",
-            statusCode: 502,
-          ))));
+      expect(result, equals(const Left(DuplicatedItemDatabaseFailure())));
     });
   });
 
@@ -144,21 +130,13 @@ void main() {
     test("fail", () async {
       // ARRANGE
       when(() => localDataSource.deleteProduct(id: any(named: "id")))
-          .thenThrow(const DatabaseException(
-        message: "error",
-        statusCode: 505,
-      ));
+          .thenThrow(const LocalDatabaseException());
 
       // ACT
       var result = await repository.deleteProduct(1);
 
       // ASSERT
-      expect(
-          result,
-          const Left(DatabaseFailure(
-            message: "error",
-            statusCode: 505,
-          )));
+      expect(result, const Left(LocalDatabaseFailure()));
     });
   });
 
@@ -199,19 +177,12 @@ void main() {
     test("fail", () async {
       // ARRANGE
       when(() => localDataSource.getAllProducts())
-          .thenThrow(const DatabaseFailure(
-        message: "Error",
-        statusCode: 505,
-      ));
+          .thenThrow(const LocalDatabaseFailure());
 
       // ACT
       // ASSERT
-      expect(
-          () => repository.getAllProducts(),
-          throwsA(const DatabaseFailure(
-            message: "Error",
-            statusCode: 505,
-          )));
+      expect(() => repository.getAllProducts(),
+          throwsA(const LocalDatabaseFailure()));
     });
   });
 
@@ -232,19 +203,12 @@ void main() {
     test("fail ID not found", () async {
       // ARRANGE
       when((() => localDataSource.getProduct(id: any(named: "id"))))
-          .thenThrow(const Left(DatabaseFailure(
-        message: "Product not found",
-        statusCode: 402,
-      )));
+          .thenThrow(const NotFoundDatabaseException());
 
       // ACT
       // ASSERT
-      expect(
-          () => repository.getProduct(1),
-          throwsA(const Left(DatabaseFailure(
-            message: "Product not found",
-            statusCode: 402,
-          ))));
+      expect(() async => await repository.getProduct(1),
+          throwsA(const Left(NotFoundDatabaseFailure())));
       verify(() => localDataSource.getProduct(id: any(named: "id"))).called(1);
       verifyNoMoreInteractions(localDataSource);
     });
@@ -252,21 +216,12 @@ void main() {
       // ARRANGE
       when(
         () => localDataSource.getProduct(id: any(named: "id")),
-      ).thenThrow(const Left(
-        DatabaseFailure(
-          message: "error",
-          statusCode: 500,
-        ),
-      ));
+      ).thenThrow(const Left(LocalDatabaseFailure()));
 
       // ACT
       // ASSERT
-      expect(
-          () => repository.getProduct(0),
-          throwsA(const Left(DatabaseFailure(
-            message: "error",
-            statusCode: 500,
-          ))));
+      expect(() => repository.getProduct(0),
+          throwsA(const Left(LocalDatabaseFailure())));
       verify(() => localDataSource.getProduct(
             id: any(named: "id"),
           )).called(1);
@@ -296,10 +251,7 @@ void main() {
     test("fail id not found", () async {
       // ARRANGE
       when(() => localDataSource.getProduct(id: any(named: "id")))
-          .thenThrow(const DatabaseException(
-        message: "Product not found",
-        statusCode: 502,
-      ));
+          .thenThrow(const NotFoundDatabaseException());
       when(() => localDataSource.updateProduct(
             product: ProductModel(
               id: params.id,
@@ -314,12 +266,7 @@ void main() {
       var result = await repository.updateProductInfo(params);
 
       // ASSERT
-      expect(
-          result,
-          const Left(DatabaseFailure(
-            message: "Product not found",
-            statusCode: 502,
-          )));
+      expect(result, const Left(NotFoundDatabaseFailure()));
       verifyNever(() => localDataSource.updateProduct(
             product: ProductModel(
               id: params.id,
@@ -350,12 +297,7 @@ void main() {
       final result = await repository.updateProductInfo(params);
 
       // ASSERT
-      expect(
-          result,
-          const Left(DatabaseFailure(
-            message: "error",
-            statusCode: 505,
-          )));
+      expect(result, const Left(DatabaseFailure(message: "error")));
     });
   });
 
@@ -402,12 +344,7 @@ void main() {
       ));
 
       // ASSERT
-      expect(
-          result,
-          const Left(DatabaseFailure(
-            message: "Min Quantity is out of range",
-            statusCode: 503,
-          )));
+      expect(result, const Left(MinQuantityDatabaseFailure()));
       verifyNever(
         () => localDataSource.getProduct(id: any(named: "id")),
       );
@@ -420,22 +357,13 @@ void main() {
       // ARRANGE
       when(
         () => localDataSource.getProduct(id: any(named: "id")),
-      ).thenThrow(const DatabaseException(
-        message: "Product not found",
-        statusCode: 502,
-      ));
-      // when(() => localDataSource.updateProduct(product: any(named: "product"))).then
+      ).thenThrow(const NotFoundDatabaseException());
 
       // ACT
       var result = await repository.updateProductPantry(params);
 
       // ASSERT
-      expect(
-          result,
-          const Left(DatabaseFailure(
-            message: "Product not found",
-            statusCode: 502,
-          )));
+      expect(result, const Left(NotFoundDatabaseFailure()));
       verify(
         () => localDataSource.getProduct(id: any(named: "id")),
       ).called(1);
@@ -451,21 +379,13 @@ void main() {
       ).thenAnswer((_) async => productModel);
       when(
         () => localDataSource.updateProduct(product: any(named: "product")),
-      ).thenThrow(const DatabaseException(
-        message: "Error",
-        statusCode: 503,
-      ));
+      ).thenThrow(const LocalDatabaseException());
 
       // ACT
       var result = await repository.updateProductPantry(params);
 
       // ASSERT
-      expect(
-          result,
-          const Left(DatabaseFailure(
-            message: "Error",
-            statusCode: 503,
-          )));
+      expect(result, const Left(LocalDatabaseFailure()));
       verify(
         () => localDataSource.getProduct(id: any(named: "id")),
       ).called(1);

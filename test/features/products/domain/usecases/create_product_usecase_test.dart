@@ -20,10 +20,7 @@ void main() {
     minQuantity: 1,
   );
 
-  const tFailure = DatabaseFailure(
-    message: "Database error",
-    statusCode: 500,
-  );
+  const tFailure = DatabaseFailure(message: "Database error");
 
   setUp(() {
     productRepository = MockProductRepository();

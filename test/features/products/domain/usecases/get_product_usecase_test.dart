@@ -20,10 +20,7 @@ void main() {
     inPantry: true,
     minQuantity: 1,
   );
-  const DatabaseFailure tFailure = DatabaseFailure(
-    message: "Database error",
-    statusCode: 500,
-  );
+  const DatabaseFailure tFailure = DatabaseFailure(message: "Database error");
 
   setUp(() {
     productRepository = MockProductRepository();

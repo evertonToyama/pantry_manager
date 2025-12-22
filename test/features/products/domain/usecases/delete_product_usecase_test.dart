@@ -12,10 +12,7 @@ void main() {
   late DeleteProductUsecase usecase;
 
   const int tId = 0;
-  const DatabaseFailure tFailure = DatabaseFailure(
-    message: "Database error",
-    statusCode: 500,
-  );
+  const DatabaseFailure tFailure = DatabaseFailure(message: "Database error");
 
   setUp(() {
     productRepository = MockProductRepository();
