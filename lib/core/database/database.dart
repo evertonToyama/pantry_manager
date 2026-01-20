@@ -23,7 +23,8 @@ abstract class Database {
   Future<int> updateStore(int id, String name);
   Future<int> deleteStore(int id);
 
-  Future<int> createShoppingList(String name, bool isFinished, int idStore);
+  Future<int> createShoppingList(
+      {required String name, bool isFinished, int? idStore});
   Future<ListModel?> getShoppingListById(int id);
   Future<List<ListModel>> getAllShoppingLists();
   Future<int> updateShoppingList(
@@ -184,7 +185,8 @@ class AppDatabase extends _$AppDatabase implements Database {
 
   // Shopping List
   @override
-  Future<int> createShoppingList(String name, bool isFinished, int idStore) {
+  Future<int> createShoppingList(
+      {required String name, bool isFinished = false, int? idStore}) {
     return _insertList(name, isFinished ? 1 : 0, idStore);
   }
 
@@ -194,29 +196,32 @@ class AppDatabase extends _$AppDatabase implements Database {
   }
 
   @override
-  Future<List<ListModel>> getAllShoppingLists() {
-    return _getAllLists().get().then((l) => l
-        .map((sl) => ListModel(
+  Future<List<ListModel>> getAllShoppingLists() async {
+    final rawLists = await _getAllLists().get();
+
+    final lists = rawLists
+        .map((sl) async => ListModel(
               id: sl.idList,
               name: sl.nameList,
               isFinished: sl.isFinished == 1,
-              products:
-                  getItemsOfList(sl.idList).then((i) => i) as List<ItemModel>,
+              products: await getItemsOfList(sl.idList),
               store: StoreModel(id: sl.idStore, name: sl.nameStore),
             ))
-        .toList());
+        .toList();
+
+    return await Future.wait(lists);
   }
 
   @override
   Future<ListModel?> getShoppingListById(int id) {
-    return _getListById(id).getSingleOrNull().then((r) => r != null
+    return _getListById(id).getSingleOrNull().then((r) async => r != null
         ? ListModel(
             id: r.idList,
             name: r.nameList,
             isFinished: r.isFinished == 1,
             store: StoreModel(id: r.idStore, name: r.nameStore),
-            products: _getItemsOfList(r.idList).get().then((i) => i)
-                as List<ItemModel>)
+            products: await getItemsOfList(r.idList),
+          )
         : null);
   }
 
